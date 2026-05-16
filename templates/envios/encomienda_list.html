@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Listado de Encomiendas - Laudesciende{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-800">Listado de Encomiendas</h1>
+        <p class="text-gray-600 mt-1">Gestión y seguimiento de envíos</p>
+    </div>
+    <a href="{% url 'envios:encomienda_create' %}" class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 gradient-bg text-white rounded-lg hover:opacity-90 transition">
+        <i class="fas fa-plus mr-2"></i> Nueva Encomienda
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="p-4 border-b border-gray-200">
+        <div class="flex flex-wrap gap-2">
+            <a href="?filtro=todas" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if filtro_actual == 'todas' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                Todas
+            </a>
+            <a href="?filtro=pendientes" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if filtro_actual == 'pendientes' %}bg-yellow-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                Pendientes
+            </a>
+            <a href="?filtro=transito" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if filtro_actual == 'transito' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                En Tránsito
+            </a>
+            <a href="?filtro=entregadas" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if filtro_actual == 'entregadas' %}bg-green-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                Entregadas
+            </a>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ruta</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peso</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for encomienda in encomiendas %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ encomienda.codigo }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ encomienda.fecha_registro|date:"d/m/Y" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ encomienda.ruta.origen }} → {{ encomienda.ruta.destino }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ encomienda.peso_kg }} kg</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if encomienda.estado == 'PE' %}
+                            <span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>
+                        {% elif encomienda.estado == 'TR' %}
+                            <span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full bg-blue-100 text-blue-800">En Tránsito</span>
+                        {% elif encomienda.estado == 'DE' %}
+                            <span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full bg-purple-100 text-purple-800">En Destino</span>
+                        {% elif encomienda.estado == 'EN' %}
+                            <span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">Entregado</span>
+                        {% elif encomienda.estado == 'DV' %}
+                            <span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full bg-red-100 text-red-800">Devuelto</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="{% url 'envios:encomienda_detail' encomienda.pk %}" class="text-indigo-600 hover:text-indigo-900 transition">
+                            <i class="fas fa-eye mr-1"></i> Ver
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-2"></i>
+                        <p>No se encontraron encomiendas</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
+        <div class="text-sm text-gray-700">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </div>
+        <div class="flex space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&filtro={{ filtro_actual }}" class="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition">Anterior</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&filtro={{ filtro_actual }}" class="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition">Siguiente</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

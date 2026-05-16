@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Encomienda - Laudesciende{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-6">
+        <a href="{% url 'envios:encomienda_list' %}" class="text-indigo-600 hover:text-indigo-800 transition">
+            <i class="fas fa-arrow-left mr-1"></i> Volver al listado
+        </a>
+        <h1 class="text-3xl font-bold text-gray-800 mt-4">Nueva Encomienda</h1>
+        <p class="text-gray-600 mt-1">Complete el formulario para registrar un nuevo envío</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-8">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-file-alt mr-1"></i> Descripción
+                    </label>
+                    {{ form.descripcion }}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-weight-hanging mr-1"></i> Peso (kg)
+                    </label>
+                    {{ form.peso_kg }}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-cube mr-1"></i> Volumen (cm³)
+                    </label>
+                    {{ form.volumen_cm3 }}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-1"></i> Remitente
+                    </label>
+                    {{ form.remitente }}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-tie mr-1"></i> Destinatario
+                    </label>
+                    {{ form.destinatario }}
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-route mr-1"></i> Ruta
+                    </label>
+                    {{ form.ruta }}
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-comment mr-1"></i> Observaciones
+                    </label>
+                    {{ form.observaciones }}
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 pt-4">
+                <a href="{% url 'envios:encomienda_list' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-2 gradient-bg text-white rounded-lg hover:opacity-90 transition">
+                    <i class="fas fa-save mr-2"></i> Registrar Encomienda
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.form-input, .form-select').forEach(el => {
+    el.classList.add('w-full', 'px-4', 'py-3', 'border', 'border-gray-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-purple-500', 'focus:border-transparent', 'transition');
+});
+</script>
+{% endblock %}

@@ -1,23 +1,14 @@
 from django.core.exceptions import ValidationError
-from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
-
-def validar_peso_positivo(value):
+def peso_positivo(value):
     if value <= 0:
-        raise ValidationError(f"El peso debe ser mayor a 0. Recibió: {value} kg")
+        raise ValidationError(_('El peso debe ser mayor a 0.'))
 
+def codigo_encomienda(value):
+    if not value.startswith('ENC-'):
+        raise ValidationError(_('El código debe comenzar con "ENC-".'))
 
-def validar_codigo_encomienda(value):
-    """
-    El código debe empezar con ENC-
-    """
-    if not value.startswith("ENC-"):
-        raise ValidationError("El código de encomienda debe comenzar con ENC-")
-
-
-def validar_nro_doc_dni(value):
-    """
-    El DNI debe tener exactamente 8 dígitos numéricos
-    """
-    if not value.isdigit() or len(value) != 8:
-        raise ValidationError("El DNI debe contener exactamente 8 dígitos numéricos")
+def nro_doc_dni(value):
+    if len(value) != 8 and not value.isdigit():
+        raise ValidationError(_('El DNI debe tener 8 dígitos.'))

@@ -1,23 +1,21 @@
 from django.db import models
-
+from config.choices import EstadoGeneral
 
 class ClienteQuerySet(models.QuerySet):
     def activos(self):
-        return self.filter(estado=1)
+        return self.filter(estado=EstadoGeneral.ACTIVO)
 
     def de_baja(self):
-        return self.filter(estado=9)
+        return self.filter(estado=EstadoGeneral.DE_BAJA)
 
     def con_dni(self):
-        return self.filter(tipo_doc="DNI")
+        return self.filter(tipo_doc='DNI')
 
     def buscar(self, termino):
-        """
-        Búsqueda por nombre, apellido
-        o número de documento
-        """
+        from django.db.models import Q
         return self.filter(
-            models.Q(nombres__icontains=termino)
-            | models.Q(apellidos__icontains=termino)
-            | models.Q(nro_doc__icontains=termino)
+            Q(nombres__icontains=termino) |
+            Q(apellidos__icontains=termino) |
+            Q(nro_doc__icontains=termino) |
+            Q(email__icontains=termino)
         )

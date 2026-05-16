@@ -1,8 +1,12 @@
-# .gitignore
-.env
-venv/
-env/
-__pycache__/
 *.pyc
+__pycache__/
+*.pyo
+.env
 db.sqlite3
-.DS_Store
+staticfiles/
+media/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/

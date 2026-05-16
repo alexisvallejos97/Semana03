@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Laudesciende{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
+    <p class="text-gray-600 mt-1">Vista general del sistema de encomiendas</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Activas</p>
+                <p id="stat-activas" class="text-3xl font-bold text-indigo-600 mt-2">{{ activas }}</p>
+            </div>
+            <div class="bg-indigo-100 p-3 rounded-full">
+                <i class="fas fa-box text-indigo-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">En Tránsito</p>
+                <p id="stat-transito" class="text-3xl font-bold text-blue-600 mt-2">{{ en_transito }}</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-full">
+                <i class="fas fa-truck text-blue-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Con Retraso</p>
+                <p id="stat-retraso" class="text-3xl font-bold text-red-600 mt-2">{{ con_retraso }}</p>
+            </div>
+            <div class="bg-red-100 p-3 rounded-full">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Entregadas Hoy</p>
+                <p id="stat-entregadas" class="text-3xl font-bold text-green-600 mt-2">{{ entregadas_hoy }}</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-full">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Acciones Rápidas</h2>
+            <div id="ws-status" class="flex items-center space-x-2">
+                <span class="pulse w-3 h-3 bg-gray-400 rounded-full"></span>
+                <span class="text-sm text-gray-600">Conectando...</span>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="{% url 'envios:encomienda_create' %}" class="flex items-center p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition">
+                <i class="fas fa-plus-circle text-2xl mr-3"></i>
+                <div>
+                    <p class="font-semibold">Nueva Encomienda</p>
+                    <p class="text-sm opacity-90">Registrar un nuevo envío</p>
+                </div>
+            </a>
+            <a href="{% url 'envios:encomienda_list' %}" class="flex items-center p-4 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-lg hover:opacity-90 transition">
+                <i class="fas fa-list-alt text-2xl mr-3"></i>
+                <div>
+                    <p class="font-semibold">Ver Listado</p>
+                    <p class="text-sm opacity-90">Consultar todos los envíos</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Actividad Reciente</h2>
+        <div id="activity-feed" class="space-y-3 max-h-96 overflow-y-auto">
+            {% for encomienda in ultimas_actividades %}
+            <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg fade-in">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-box text-indigo-500"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900">{{ encomienda.codigo }}</p>
+                    <p class="text-xs text-gray-500">{{ encomienda.get_estado_display }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-gray-500 text-sm text-center py-4">No hay actividad reciente</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let ws;
+function connectWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${protocol}//${window.location.host}/ws/dashboard/`);
+    
+    ws.onopen = function() {
+        document.getElementById('ws-status').innerHTML = '<span class="pulse w-3 h-3 bg-green-500 rounded-full"></span><span class="text-sm text-green-600">EN VIVO</span>';
+    };
+    
+    ws.onclose = function() {
+        document.getElementById('ws-status').innerHTML = '<span class="w-3 h-3 bg-red-500 rounded-full"></span><span class="text-sm text-red-600">Desconectado</span>';
+        setTimeout(connectWebSocket, 3000);
+    };
+    
+    ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.type === 'dashboard.actualizacion') {
+            fetch('{% url "envios:dashboard_stats_async" %}')
+                .then(res => res.json())
+                .then(stats => {
+                    animateValue('stat-activas', parseInt(document.getElementById('stat-activas').innerText), stats.activas);
+                    animateValue('stat-transito', parseInt(document.getElementById('stat-transito').innerText), stats.en_transito);
+                    animateValue('stat-retraso', parseInt(document.getElementById('stat-retraso').innerText), stats.con_retraso);
+                    animateValue('stat-entregadas', parseInt(document.getElementById('stat-entregadas').innerText), stats.entregadas_hoy);
+                });
+            showToast('Encomienda actualizada', `${data.codigo} cambió de estado`, 'info');
+        }
+    };
+}
+
+function animateValue(id, start, end) {
+    if (start === end) return;
+    const range = end - start;
+    let current = start;
+    const increment = end > start ? 1 : -1;
+    const stepTime = Math.abs(Math.floor(500 / range));
+    const obj = document.getElementById(id);
+    const timer = setInterval(function() {
+        current += increment;
+        obj.innerHTML = current;
+        if (current == end) clearInterval(timer);
+    }, Math.max(stepTime, 50));
+}
+
+function showToast(title, message, type = 'info') {
+    const colors = { info: 'bg-blue-500', success: 'bg-green-500', error: 'bg-red-500' };
+    const icons = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-exclamation-circle' };
+    const toast = document.createElement('div');
+    toast.className = `${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 fade-in`;
+    toast.innerHTML = `<i class="fas ${icons[type]}"></i><div><p class="font-semibold">${title}</p><p class="text-sm">${message}</p></div>`;
+    document.getElementById('toast-container').appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+document.addEventListener('DOMContentLoaded', connectWebSocket);
+</script>
+{% endblock %}

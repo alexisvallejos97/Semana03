@@ -1,28 +1,21 @@
 from django.db import models
-
+from config.choices import EstadoEnvio
 
 class EncomiendaQuerySet(models.QuerySet):
-    # ── Filtros por estado ───────────────────────────
-
     def pendientes(self):
-        return self.filter(estado="PE")
+        return self.filter(estado=EstadoEnvio.PENDIENTE)
 
     def en_transito(self):
-        return self.filter(estado="TR")
+        return self.filter(estado=EstadoEnvio.EN_TRANSITO)
 
     def entregadas(self):
-        return self.filter(estado="EN")
+        return self.filter(estado=EstadoEnvio.ENTREGADO)
 
     def devueltas(self):
-        return self.filter(estado="DV")
+        return self.filter(estado=EstadoEnvio.DEVUELTO)
 
     def activas(self):
-        """
-        Pendientes + en tránsito + en destino
-        """
-        return self.filter(estado__in=["PE", "TR", "DE"])
-
-    # ── Filtros compuestos ─────────────────────────
+        return self.exclude(estado__in=[EstadoEnvio.ENTREGADO, EstadoEnvio.DEVUELTO])
 
     def por_ruta(self, ruta):
         return self.filter(ruta=ruta)
@@ -34,28 +27,14 @@ class EncomiendaQuerySet(models.QuerySet):
         return self.filter(destinatario=cliente)
 
     def en_transito_por_ruta(self, ruta):
-        return self.en_transito().por_ruta(ruta)
-
-    # ── Con retraso ────────────────────────────
+        return self.filter(estado=EstadoEnvio.EN_TRANSITO, ruta=ruta)
 
     def con_retraso(self):
-        """
-        Encomiendas activas cuya fecha estimada ya pasó
-        """
         from django.utils import timezone
-
-        return self.activas().filter(fecha_entrega_est__lt=timezone.now().date())
-
-    # ── Optimización de consultas ──────────────────
+        return self.filter(
+            fecha_entrega_est__lt=timezone.now().date(),
+            estado__in=[EstadoEnvio.PENDIENTE, EstadoEnvio.EN_TRANSITO, EstadoEnvio.EN_DESTINO]
+        )
 
     def con_relaciones(self):
-        """
-        Precarga las relaciones más usadas
-        (evita el problema N+1)
-        """
-        return self.select_related(
-            "remitente",
-            "destinatario",
-            "ruta",
-            "empleado_registro",
-        )
+        return self.select_related('remitente', 'destinatario', 'ruta', 'empleado_registro')
